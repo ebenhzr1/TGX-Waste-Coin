@@ -104,6 +104,8 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 app.get('/', (req, res) => {
   res.json({
     message: 'TGX Waste Coin API Running',

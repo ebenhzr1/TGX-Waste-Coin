@@ -64,6 +64,10 @@ function makeRequest(options, postData = null) {
 }
 
 async function runSprint25Tests() {
+    try {
+        const app = require("../server");
+        app.listen(5000);
+    } catch (_) {}
     console.log("============================================================");
     console.log("TGX WASTE COIN - SPRINT 25 TEST SUITE");
     console.log("EXECUTIVE ESG COMMAND CENTER");

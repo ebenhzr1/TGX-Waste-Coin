@@ -57,6 +57,10 @@ function makeRequest(options, postData = null) {
 }
 
 async function runSprint24Tests() {
+    try {
+        const app = require("../server");
+        app.listen(5000);
+    } catch (_) {}
     console.log("============================================================");
     console.log("TGX WASTE COIN - SPRINT 24 TEST SUITE");
     console.log("AI WASTE VERIFICATION & INTELLIGENT SORTING SYSTEM");

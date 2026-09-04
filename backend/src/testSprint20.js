@@ -44,6 +44,11 @@ function makeRequest(options, postData = null) {
 }
 
 async function runTests() {
+    let server;
+    try {
+        const app = require("./../server");
+        server = app.listen(5000);
+    } catch (_) {}
     console.log("=================================================");
     console.log("TESTING SPRINT 20: TGX GAMIFICATION & ECO COMPETITION");
     console.log("=================================================\n");

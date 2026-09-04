@@ -172,10 +172,15 @@ async function updateUserGamification(userId, addedWeightKg, addedCoin, wasteTyp
 
         if (aggRes.rows.length > 0) {
             dbConnected = true;
-            totalTransactionsCount = parseInt(aggRes.rows[0].total_tx);
-            currentTotalWeight = parseFloat(aggRes.rows[0].total_weight);
-            currentTotalCoin = parseFloat(aggRes.rows[0].total_coin);
-            plasticTotalWeight = parseFloat(aggRes.rows[0].plastic_weight);
+            totalTransactionsCount = parseInt(aggRes.rows[0].total_tx) || 1;
+            const dbWeight = parseFloat(aggRes.rows[0].total_weight) || 0;
+            const prevWeight = memoryUserLevels[uId]?.total_weight_kg || 0;
+            currentTotalWeight = dbWeight > 0 ? dbWeight : (prevWeight + weight);
+            const dbCoin = parseFloat(aggRes.rows[0].total_coin) || 0;
+            const prevCoin = memoryUserLevels[uId]?.total_coin || 0;
+            currentTotalCoin = dbCoin > 0 ? dbCoin : (prevCoin + coin);
+            const dbPlastic = parseFloat(aggRes.rows[0].plastic_weight) || 0;
+            plasticTotalWeight = dbPlastic > 0 ? dbPlastic : (wasteType.toLowerCase().includes("plastik") ? currentTotalWeight : 0);
         }
     } catch (dbErr) {
         console.warn("DB offline, gamification menggunakan in-memory fallback:", dbErr.message);
@@ -214,6 +219,7 @@ async function updateUserGamification(userId, addedWeightKg, addedCoin, wasteTyp
             );
         } catch (lvlErr) {
             console.warn("Peringatan: Gagal upsert user_levels:", lvlErr.message);
+            memoryUserLevels[uId] = { level: levelInfo.level, total_weight_kg: currentTotalWeight, total_coin: currentTotalCoin };
         }
     } else {
         memoryUserLevels[uId].level = levelInfo.level;
@@ -231,8 +237,12 @@ async function updateUserGamification(userId, addedWeightKg, addedCoin, wasteTyp
                 [uId]
             );
             ownedBadgeIds = ownedRes.rows.map(r => r.badge_id);
+            if (ownedBadgeIds.length === 0 && memoryUserBadges.some(ub => ub.user_id === uId)) {
+                ownedBadgeIds = memoryUserBadges.filter(ub => ub.user_id === uId).map(ub => ub.badge_id);
+            }
         } catch (bErr) {
             console.warn("Peringatan: Gagal query user_badges:", bErr.message);
+            ownedBadgeIds = memoryUserBadges.filter(ub => ub.user_id === uId).map(ub => ub.badge_id);
         }
     } else {
         ownedBadgeIds = memoryUserBadges
@@ -275,6 +285,11 @@ async function updateUserGamification(userId, addedWeightKg, addedCoin, wasteTyp
                 );
             } catch (insErr) {
                 console.warn("Peringatan insert user_badge:", insErr.message);
+                memoryUserBadges.push({
+                    user_id: uId,
+                    badge_id: badge.id,
+                    earned_at: new Date().toISOString()
+                });
             }
         } else {
             memoryUserBadges.push({
@@ -361,6 +376,17 @@ async function getUserAchievement(userId) {
             earnedBadgesMap[b.id] = b.earned_at;
         });
 
+        if (badgesRes.rows.length === 0) {
+            memoryUserBadges
+                .filter(ub => ub.user_id === uId)
+                .forEach(ub => {
+                    earnedBadgesMap[ub.badge_id] = ub.earned_at;
+                });
+        }
+        if (totalWeight === 0 && memoryUserLevels[uId]) {
+            totalWeight = memoryUserLevels[uId].total_weight_kg;
+            totalCoin = memoryUserLevels[uId].total_coin;
+        }
     } catch (err) {
         console.warn("DB offline, getUserAchievement fallback aktif:", err.message);
         const mem = memoryUserLevels[uId] || { level: 2, total_weight_kg: 75.0, total_coin: 375.0 };

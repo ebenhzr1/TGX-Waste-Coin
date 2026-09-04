@@ -345,7 +345,7 @@ ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS user_levels (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
+    user_id INTEGER UNIQUE REFERENCES users(id),
     level INTEGER DEFAULT 1,
     total_weight_kg DECIMAL(12,2) DEFAULT 0,
     total_coin DECIMAL(12,2) DEFAULT 0,
@@ -367,7 +367,8 @@ CREATE TABLE IF NOT EXISTS user_badges (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
     badge_id INTEGER REFERENCES badges(id),
-    earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, badge_id)
 );
 
 

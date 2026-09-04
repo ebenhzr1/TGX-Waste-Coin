@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "TGX Waste Coin",
+    "slug": "tgx-waste-coin-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#064e3b"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jwalita.tgxwastecoin"
+    },
+    "android": {
+      "package": "com.jwalita.tgxwastecoin",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Aplikasi TGX Waste Coin membutuhkan izin kamera untuk memfoto setoran sampah dan memindai QR code."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Aplikasi membutuhkan izin lokasi GPS untuk menandai koordinat TPS dan setoran sampah."
+        }
+      ]
+    ]
+  }
+}

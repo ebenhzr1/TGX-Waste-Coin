@@ -106,13 +106,26 @@ app.get('/api/health', async (req, res) => {
 
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-app.get('/', (req, res) => {
-  res.json({
-    message: 'TGX Waste Coin API Running',
-    docs: '/api/docs',
-    health: '/api/health',
+const distPath = path.join(__dirname, '../frontend/dist');
+const fs = require('fs');
+
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path === '/favicon.ico') {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
   });
-});
+} else {
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'TGX Waste Coin API Running',
+      docs: '/api/docs',
+      health: '/api/health',
+    });
+  });
+}
 
 // ── Sprint 26: Global error handler (last middleware) ─────────────────────
 app.use(logger.errorHandler);

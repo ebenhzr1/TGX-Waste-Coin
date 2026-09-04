@@ -1,63 +1,76 @@
 import React, { useState } from "react";
 import api from "../api/api";
 import { useNavigate, Link } from "react-router-dom";
-import { Coins, Leaf, Shield, Lock, Mail, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { Coins, Leaf, Shield, Lock, Mail, ArrowRight, AlertCircle, KeyRound } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("budi@test.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
-    setLoading(true);
     setErrorMsg("");
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail || !cleanPassword) {
+      setErrorMsg("Harap masukkan email dan kata sandi.");
+      return;
+    }
+
+    if (cleanPassword.length < 4) {
+      setErrorMsg("Kata sandi minimal 4 karakter.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const res = await api.post("/auth/login", { email, password });
+      const res = await api.post("/auth/login", { email: cleanEmail, password: cleanPassword });
       
       if (res.data && res.data.token) {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("tgx_token", res.data.token);
         localStorage.setItem("tgx_user", JSON.stringify(res.data.user));
         
-        if (res.data.user.role === "admin") {
+        const userRole = res.data.user?.role || role;
+        if (userRole === "admin" || userRole === "super_admin" || userRole === "direksi") {
           navigate("/admin");
-        } else if (res.data.user.role === "school") {
+        } else if (userRole === "school" || userRole === "operator" || userRole === "operator_sekolah") {
           navigate("/school");
         } else {
           navigate("/dashboard");
         }
         return;
+      } else {
+        setErrorMsg("Respon autentikasi tidak valid dari server.");
       }
     } catch (err) {
-      console.warn("API login offline/error, falling back to demo session:", err.message);
-      // Fallback demo login saat database Supabase maintenance
-      const demoUser = {
-        id: 1,
-        name: email.split("@")[0].toUpperCase() || "Ahmad Santoso",
-        email: email,
-        role: role,
-        schoolName: "SDN 2 Bendorejo"
-      };
-      
-      localStorage.setItem("token", "demo_jwt_token_tgx_2026");
-      localStorage.setItem("tgx_token", "demo_jwt_token_tgx_2026");
-      localStorage.setItem("tgx_user", JSON.stringify(demoUser));
-
-      if (role === "admin") {
-        navigate("/admin");
-      } else if (role === "school") {
-        navigate("/school");
+      const serverMessage = err.response?.data?.message;
+      if (err.response?.status === 401 || err.response?.status === 404) {
+        setErrorMsg(serverMessage || "Email atau kata sandi tidak valid. Silakan periksa kembali.");
+      } else if (err.response?.status === 429) {
+        setErrorMsg("Terlalu banyak percobaan login. Silakan tunggu beberapa menit.");
+      } else if (!err.response) {
+        setErrorMsg("Gagal terhubung ke server API. Pastikan koneksi backend aktif.");
       } else {
-        navigate("/dashboard");
+        setErrorMsg(serverMessage || "Gagal masuk. Silakan coba lagi.");
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const fillQuickCredential = (demoEmail, demoPassword, demoRole) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setRole(demoRole);
+    setErrorMsg("");
   };
 
   return (
@@ -90,12 +103,12 @@ export default function Login() {
         {/* Login Card */}
         <div className="bg-slate-900/70 border border-slate-800/80 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
           <h2 className="text-xl font-bold text-white mb-1">Masuk ke Akun</h2>
-          <p className="text-xs text-slate-400 mb-6">Pilih peran dan masukkan kredensial untuk akses dashboard</p>
+          <p className="text-xs text-slate-400 mb-6">Pilih peran dan masukkan email serta kata sandi terdaftar</p>
 
           {errorMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
-              <Shield className="w-4 h-4 shrink-0" />
-              {errorMsg}
+            <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-xs flex items-start gap-2.5 animate-shake">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="leading-relaxed">{errorMsg}</div>
             </div>
           )}
 
@@ -112,13 +125,7 @@ export default function Login() {
                 id={`role-btn-${item.id}`}
                 onClick={() => {
                   setRole(item.id);
-                  if (item.id === "admin") {
-                    setEmail("admin@jet.co.id");
-                  } else if (item.id === "school") {
-                    setEmail("sdn2@trenggalek.sch.id");
-                  } else {
-                    setEmail("budi@test.com");
-                  }
+                  setErrorMsg("");
                 }}
                 className={`py-2 text-xs font-semibold rounded-lg transition-all ${
                   role === item.id
@@ -140,9 +147,18 @@ export default function Login() {
                   id="login-email"
                   type="email"
                   required
-                  placeholder="nama@sekolah.id"
+                  placeholder={
+                    role === "admin"
+                      ? "admin@jet.co.id"
+                      : role === "school"
+                      ? "operator@sekolah.id"
+                      : "siswa@sekolah.id"
+                  }
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errorMsg) setErrorMsg("");
+                  }}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                 />
               </div>
@@ -156,9 +172,12 @@ export default function Login() {
                   id="login-password"
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder="Masukkan kata sandi..."
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errorMsg) setErrorMsg("");
+                  }}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                 />
               </div>
@@ -181,35 +200,38 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Quick Demo Info */}
+          {/* Akun Pengujian Resmi */}
           <div className="mt-6 pt-5 border-t border-slate-800/80">
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                Akses Langsung Demo:
+            <div className="flex items-center justify-between text-xs text-slate-400 mb-2.5">
+              <span className="flex items-center gap-1.5 font-medium text-slate-300">
+                <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
+                Kredensial Akun Pengujian:
               </span>
             </div>
             <div className="grid grid-cols-3 gap-1.5 text-[11px]">
               <button
                 type="button"
-                onClick={() => { setRole("student"); setEmail("ahmad@siswa.id"); setPassword("123456"); }}
-                className="p-1.5 bg-slate-800/50 hover:bg-slate-800 rounded-lg text-slate-300 text-center transition-all"
+                onClick={() => fillQuickCredential("siswa@sekolah.id", "siswa123", "student")}
+                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40"
               >
-                Siswa
+                <div className="font-semibold text-white">Siswa</div>
+                <div className="text-[10px] text-slate-500">siswa123</div>
               </button>
               <button
                 type="button"
-                onClick={() => { setRole("school"); setEmail("sdn2@trenggalek.sch.id"); setPassword("123456"); }}
-                className="p-1.5 bg-slate-800/50 hover:bg-slate-800 rounded-lg text-slate-300 text-center transition-all"
+                onClick={() => fillQuickCredential("operator@sekolah.id", "operator123", "school")}
+                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40"
               >
-                Sekolah
+                <div className="font-semibold text-white">Sekolah</div>
+                <div className="text-[10px] text-slate-500">operator123</div>
               </button>
               <button
                 type="button"
-                onClick={() => { setRole("admin"); setEmail("admin@jet.co.id"); setPassword("123456"); }}
-                className="p-1.5 bg-slate-800/50 hover:bg-slate-800 rounded-lg text-slate-300 text-center transition-all"
+                onClick={() => fillQuickCredential("admin@jet.co.id", "admin123", "admin")}
+                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40"
               >
-                Admin JET
+                <div className="font-semibold text-white">Admin JET</div>
+                <div className="text-[10px] text-slate-500">admin123</div>
               </button>
             </div>
           </div>

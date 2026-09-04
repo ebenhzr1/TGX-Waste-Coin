@@ -1,15 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../api/api";
 import { useNavigate, Link } from "react-router-dom";
-import { Coins, Leaf, Shield, Lock, Mail, ArrowRight, AlertCircle, KeyRound } from "lucide-react";
+import { Coins, Leaf, Shield, Lock, Mail, ArrowRight, AlertCircle, KeyRound, Eye, EyeOff, CheckSquare, Square } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("tgx_remember_email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
@@ -26,6 +36,12 @@ export default function Login() {
     if (cleanPassword.length < 4) {
       setErrorMsg("Kata sandi minimal 4 karakter.");
       return;
+    }
+
+    if (rememberMe) {
+      localStorage.setItem("tgx_remember_email", cleanEmail);
+    } else {
+      localStorage.removeItem("tgx_remember_email");
     }
 
     setLoading(true);
@@ -108,7 +124,7 @@ export default function Login() {
           {errorMsg && (
             <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-xs flex items-start gap-2.5 animate-shake">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <div className="leading-relaxed">{errorMsg}</div>
+              <div className="leading-relaxed font-medium">{errorMsg}</div>
             </div>
           )}
 
@@ -129,7 +145,7 @@ export default function Login() {
                 }}
                 className={`py-2 text-xs font-semibold rounded-lg transition-all ${
                   role === item.id
-                    ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/25"
+                    ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/25 font-bold"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
@@ -170,7 +186,7 @@ export default function Login() {
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                 <input
                   id="login-password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   placeholder="Masukkan kata sandi..."
                   value={password}
@@ -178,16 +194,42 @@ export default function Login() {
                     setPassword(e.target.value);
                     if (errorMsg) setErrorMsg("");
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                  className="w-full pl-10 pr-11 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                  aria-label={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-slate-400 py-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="hidden"
+                />
+                {rememberMe ? (
+                  <CheckSquare className="w-4 h-4 text-emerald-400" />
+                ) : (
+                  <Square className="w-4 h-4 text-slate-600 hover:text-slate-500" />
+                )}
+                <span>Ingat email saya</span>
+              </label>
+              <span className="text-[11px] text-slate-500">Koneksi SSL Enkripsi 256-bit</span>
             </div>
 
             <button
               id="btn-submit-login"
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60"
+              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
@@ -212,7 +254,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => fillQuickCredential("siswa@sekolah.id", "siswa123", "student")}
-                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40"
+                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40 cursor-pointer"
               >
                 <div className="font-semibold text-white">Siswa</div>
                 <div className="text-[10px] text-slate-500">siswa123</div>
@@ -220,7 +262,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => fillQuickCredential("operator@sekolah.id", "operator123", "school")}
-                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40"
+                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40 cursor-pointer"
               >
                 <div className="font-semibold text-white">Sekolah</div>
                 <div className="text-[10px] text-slate-500">operator123</div>
@@ -228,7 +270,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => fillQuickCredential("admin@jet.co.id", "admin123", "admin")}
-                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40"
+                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40 cursor-pointer"
               >
                 <div className="font-semibold text-white">Admin JET</div>
                 <div className="text-[10px] text-slate-500">admin123</div>

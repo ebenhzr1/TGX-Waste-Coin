@@ -82,7 +82,10 @@ const { Pool } = require('pg');
 app.get('/api/health', async (req, res) => {
   let dbStatus = 'disconnected';
   try {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
     await pool.query('SELECT 1');
     await pool.end();
     dbStatus = 'connected';
@@ -111,9 +114,13 @@ app.get('/', (req, res) => {
 app.use(logger.errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`, {
-    env: process.env.NODE_ENV || 'development',
-    docs: `http://localhost:${PORT}/api/docs`,
+if (require.main === module) {
+  app.listen(PORT, () => {
+    logger.info(`Server running on port ${PORT}`, {
+      env: process.env.NODE_ENV || 'development',
+      docs: `http://localhost:${PORT}/api/docs`,
+    });
   });
-});
+}
+
+module.exports = app;

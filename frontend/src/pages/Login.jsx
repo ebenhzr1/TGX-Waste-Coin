@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/api";
-import { useNavigate, Link } from "react-router-dom";
-import { Coins, Leaf, Shield, Lock, Mail, ArrowRight, AlertCircle, KeyRound, Eye, EyeOff, CheckSquare, Square } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Coins, Leaf, Lock, Mail, ArrowRight, AlertCircle, Eye, EyeOff, CheckSquare, Square } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -82,13 +82,6 @@ export default function Login() {
     }
   };
 
-  const fillQuickCredential = (demoEmail, demoPassword, demoRole) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setRole(demoRole);
-    setErrorMsg("");
-  };
-
   return (
     <div className="min-h-screen bg-[#060a11] text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Glow Orbs Background */}
@@ -119,7 +112,7 @@ export default function Login() {
         {/* Login Card */}
         <div className="bg-slate-900/70 border border-slate-800/80 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
           <h2 className="text-xl font-bold text-white mb-1">Masuk ke Akun</h2>
-          <p className="text-xs text-slate-400 mb-6">Pilih peran dan masukkan email serta kata sandi terdaftar</p>
+          <p className="text-xs text-slate-400 mb-6">Pilih peran dan masukkan email serta kata sandi Anda</p>
 
           {errorMsg && (
             <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-xs flex items-start gap-2.5 animate-shake">
@@ -143,7 +136,7 @@ export default function Login() {
                   setRole(item.id);
                   setErrorMsg("");
                 }}
-                className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                   role === item.id
                     ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/25 font-bold"
                     : "text-slate-400 hover:text-white"
@@ -163,19 +156,13 @@ export default function Login() {
                   id="login-email"
                   type="email"
                   required
-                  placeholder={
-                    role === "admin"
-                      ? "admin@jet.co.id"
-                      : role === "school"
-                      ? "operator@sekolah.id"
-                      : "siswa@sekolah.id"
-                  }
+                  placeholder="nama@email.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
                     if (errorMsg) setErrorMsg("");
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                 />
               </div>
             </div>
@@ -194,12 +181,12 @@ export default function Login() {
                     setPassword(e.target.value);
                     if (errorMsg) setErrorMsg("");
                   }}
-                  className="w-full pl-10 pr-11 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                  className="w-full pl-10 pr-11 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
                   aria-label={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -222,7 +209,6 @@ export default function Login() {
                 )}
                 <span>Ingat email saya</span>
               </label>
-              <span className="text-[11px] text-slate-500">Koneksi SSL Enkripsi 256-bit</span>
             </div>
 
             <button
@@ -241,42 +227,6 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          {/* Akun Pengujian Resmi */}
-          <div className="mt-6 pt-5 border-t border-slate-800/80">
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-2.5">
-              <span className="flex items-center gap-1.5 font-medium text-slate-300">
-                <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
-                Kredensial Akun Pengujian:
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-              <button
-                type="button"
-                onClick={() => fillQuickCredential("siswa@sekolah.id", "siswa123", "student")}
-                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40 cursor-pointer"
-              >
-                <div className="font-semibold text-white">Siswa</div>
-                <div className="text-[10px] text-slate-500">siswa123</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillQuickCredential("operator@sekolah.id", "operator123", "school")}
-                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40 cursor-pointer"
-              >
-                <div className="font-semibold text-white">Sekolah</div>
-                <div className="text-[10px] text-slate-500">operator123</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillQuickCredential("admin@jet.co.id", "admin123", "admin")}
-                className="p-2 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg text-slate-300 text-center transition-all hover:border-emerald-500/40 cursor-pointer"
-              >
-                <div className="font-semibold text-white">Admin JET</div>
-                <div className="text-[10px] text-slate-500">admin123</div>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Footer info */}

@@ -61,7 +61,9 @@ app.use('/api/executive',   executiveRoutes);
 app.use('/api/ecosystem',   ecosystemRoutes);
 
 // ── Schedulers ────────────────────────────────────────────────────────────
-require('./src/services/scheduler');
+if (!process.env.VERCEL) {
+  try { require('./src/services/scheduler'); } catch (e) {}
+}
 
 // ── Sprint 26: Health endpoint ─────────────────────────────────────────────
 const { Pool } = require('pg');

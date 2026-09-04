@@ -6,8 +6,14 @@
 const fs = require('fs');
 const path = require('path');
 
-const LOG_DIR = path.join(__dirname, '../../logs');
-if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+const LOG_DIR = isServerless ? '/tmp/logs' : path.join(__dirname, '../../logs');
+
+try {
+  if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
+} catch (_) {
+  // Ignore FS errors on read-only environments
+}
 
 const LEVELS = { error: 0, warn: 1, info: 2, debug: 3 };
 const CURRENT_LEVEL = LEVELS[process.env.LOG_LEVEL] ?? LEVELS.info;

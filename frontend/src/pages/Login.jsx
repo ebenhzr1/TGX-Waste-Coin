@@ -1,8 +1,8 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
 import {
-  Coins, Leaf, Lock, Mail, ArrowRight, AlertCircle,
+  Leaf, Lock, Mail, ArrowRight, AlertCircle,
   Eye, EyeOff, CheckSquare, Square, User, CheckCircle2,
   ShieldCheck, RotateCcw
 } from "lucide-react";
@@ -153,20 +153,15 @@ export default function Login() {
 
       <div className="w-full max-w-md relative z-10">
         {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-4">
-            <Leaf className="w-3.5 h-3.5" />
-            PT Jwalita Energi Trenggalek
-          </div>
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Coins className="w-6 h-6 text-slate-950 stroke-[2.5]" />
-            </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">
-              TGX <span className="text-emerald-400">Waste Coin</span>
-            </h1>
-          </div>
-          <p className="text-sm text-slate-400">Platform Ekonomi Sirkular &amp; Insentif Reduksi Karbon Sekolah Trenggalek</p>
+        <div className="text-center mb-7">
+          <img
+            src="/logo.jpg"
+            alt="TGX Waste Coin #OffsetNow"
+            className="h-20 sm:h-24 mx-auto mb-3 object-contain drop-shadow-lg"
+          />
+          <p className="text-sm text-slate-400 mt-1">
+            Platform Ekonomi Sirkular &amp; Insentif Reduksi Karbon Sekolah Trenggalek
+          </p>
         </div>
 
         {/* Card */}

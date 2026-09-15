@@ -174,10 +174,14 @@ const sendOTP = async (req, res) => {
         const { email, name } = req.body;
         if (!email) return res.status(400).json({ message: "Email wajib diisi." });
 
-        // cek apakah email sudah terdaftar
-        const existing = await pool.query("SELECT id FROM users WHERE email=$1", [email.toLowerCase()]);
-        if (existing.rows.length > 0) {
-            return res.status(400).json({ message: "Email sudah terdaftar. Silakan masuk." });
+        // cek apakah email sudah terdaftar (toleran jika DB sedang restore/wake up)
+        try {
+            const existing = await pool.query("SELECT id FROM users WHERE email=$1", [email.toLowerCase()]);
+            if (existing.rows.length > 0) {
+                return res.status(400).json({ message: "Email sudah terdaftar. Silakan masuk." });
+            }
+        } catch (dbErr) {
+            console.warn("DB check skipped (Supabase offline/paused):", dbErr.message);
         }
 
         const otp = generateOTP();

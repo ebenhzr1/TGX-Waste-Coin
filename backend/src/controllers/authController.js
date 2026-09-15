@@ -187,7 +187,7 @@ const sendOTP = async (req, res) => {
         res.json({ message: "Kode OTP berhasil dikirim ke email Anda." });
     } catch (error) {
         console.error("sendOTP error:", error);
-        res.status(500).json({ message: "Gagal mengirim OTP. Coba lagi." });
+        res.status(500).json({ message: error.message || "Gagal mengirim OTP. Coba lagi." });
     }
 };
 

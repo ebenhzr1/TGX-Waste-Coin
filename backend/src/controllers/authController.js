@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/database");
 const permissionService = require("../services/permissionService");
+const { generateOTP, saveOTP, verifyOTP } = require("../services/otpService");
+const { sendOTPEmail } = require("../services/emailService");
 
 
 // REGISTER USER
@@ -164,7 +166,76 @@ const login = async (req,res)=>{
 
 
 
+
+
+// SEND OTP — kirim kode verifikasi ke email sebelum registrasi
+const sendOTP = async (req, res) => {
+    try {
+        const { email, name } = req.body;
+        if (!email) return res.status(400).json({ message: "Email wajib diisi." });
+
+        // cek apakah email sudah terdaftar
+        const existing = await pool.query("SELECT id FROM users WHERE email=$1", [email.toLowerCase()]);
+        if (existing.rows.length > 0) {
+            return res.status(400).json({ message: "Email sudah terdaftar. Silakan masuk." });
+        }
+
+        const otp = generateOTP();
+        saveOTP(email, otp);
+        await sendOTPEmail(email, otp, name);
+
+        res.json({ message: "Kode OTP berhasil dikirim ke email Anda." });
+    } catch (error) {
+        console.error("sendOTP error:", error);
+        res.status(500).json({ message: "Gagal mengirim OTP. Coba lagi." });
+    }
+};
+
+
+// VERIFY OTP & REGISTER — verifikasi kode lalu buat akun
+const verifyAndRegister = async (req, res) => {
+    try {
+        const { name, email, password, role, otp } = req.body;
+
+        if (!name || !email || !password || !otp) {
+            return res.status(400).json({ message: "Semua kolom wajib diisi." });
+        }
+
+        const check = verifyOTP(email, otp);
+        if (!check.valid) {
+            return res.status(400).json({ message: check.reason });
+        }
+
+        // cek ulang email duplikat
+        const existing = await pool.query("SELECT id FROM users WHERE email=$1", [email.toLowerCase()]);
+        if (existing.rows.length > 0) {
+            return res.status(400).json({ message: "Email sudah terdaftar." });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = await pool.query(
+            `INSERT INTO users (name, email, password, role)
+             VALUES ($1, $2, $3, $4)
+             RETURNING id, name, email, role`,
+            [name.trim(), email.trim().toLowerCase(), hashedPassword, role || "student"]
+        );
+
+        res.status(201).json({
+            message: "Akun berhasil dibuat! Silakan masuk.",
+            user: result.rows[0],
+        });
+    } catch (error) {
+        console.error("verifyAndRegister error:", error);
+        res.status(500).json({ message: "Server error." });
+    }
+};
+
+
+
 module.exports = {
     register,
-    login
+    login,
+    sendOTP,
+    verifyAndRegister,
 };
+
